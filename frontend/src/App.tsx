@@ -9,6 +9,8 @@ import AppCalls from './components/AppCalls'
 import ConnectWallet from './components/ConnectWallet'
 import Transact from './components/Transact'
 import { getAlgodConfigFromViteEnvironment } from './utils/network/getAlgoClientConfigs'
+import { ChakraProvider } from '@chakra-ui/react'
+import Mint from './components/Mint'
 
 let providersArray: ProvidersArray
 if (import.meta.env.VITE_ALGOD_NETWORK === '') {
@@ -56,6 +58,7 @@ export default function App() {
   })
 
   return (
+
     <SnackbarProvider maxSnack={3}>
       <WalletProvider value={walletProviders}>
         <div className="hero min-h-screen bg-teal-400">
@@ -95,10 +98,12 @@ export default function App() {
                   </button>
                 )}
               </div>
-
-              <ConnectWallet openModal={openWalletModal} closeModal={toggleWalletModal} />
-              <Transact openModal={openDemoModal} setModalState={setOpenDemoModal} />
-              <AppCalls openModal={appCallsDemoModal} setModalState={setAppCallsDemoModal} />
+              <ChakraProvider>
+                <ConnectWallet openModal={openWalletModal} closeModal={toggleWalletModal} />
+                <Transact openModal={openDemoModal} setModalState={setOpenDemoModal} />
+                <AppCalls openModal={appCallsDemoModal} setModalState={setAppCallsDemoModal} />
+                <Mint />
+              </ChakraProvider>
             </div>
           </div>
         </div>

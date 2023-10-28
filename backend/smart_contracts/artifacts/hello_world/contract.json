@@ -1,0 +1,30 @@
+{
+    "name": "hello_world",
+    "methods": [
+        {
+            "name": "hello",
+            "args": [
+                {
+                    "type": "string",
+                    "name": "name"
+                }
+            ],
+            "returns": {
+                "type": "string"
+            }
+        },
+        {
+            "name": "deposit",
+            "args": [
+                {
+                    "type": "string",
+                    "name": "address"
+                }
+            ],
+            "returns": {
+                "type": "string"
+            }
+        }
+    ],
+    "networks": {}
+}

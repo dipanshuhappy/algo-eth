@@ -6,6 +6,7 @@ import { useSnackbar } from 'notistack'
 import { useState } from 'react'
 import { HelloWorldClient } from '../contracts/hello_world'
 import { getAlgodConfigFromViteEnvironment, getIndexerConfigFromViteEnvironment } from '../utils/network/getAlgoClientConfigs'
+import algosdk from 'algosdk'
 
 interface AppCallsInterface {
   openModal: boolean
@@ -23,6 +24,7 @@ const AppCalls = ({ openModal, setModalState }: AppCallsInterface) => {
     token: algodConfig.token,
   })
 
+
   const indexerConfig = getIndexerConfigFromViteEnvironment()
   const indexer = algokit.getAlgoIndexerClient({
     server: indexerConfig.server,
@@ -31,7 +33,7 @@ const AppCalls = ({ openModal, setModalState }: AppCallsInterface) => {
   })
 
   const { enqueueSnackbar } = useSnackbar()
-  const { signer, activeAddress } = useWallet()
+  const { signer, activeAddress, activeAccount, signTransactions, sendTransactions } = useWallet()
 
   const sendAppCall = async () => {
     setLoading(true)
@@ -54,10 +56,15 @@ const AppCalls = ({ openModal, setModalState }: AppCallsInterface) => {
       onSchemaBreak: 'append',
       onUpdate: 'append',
     }
+    let appAddress = "";
     await appClient.deploy(deployParams).catch((e: Error) => {
       enqueueSnackbar(`Error deploying the contract: ${e.message}`, { variant: 'error' })
-      setLoading(false)
-      return
+      setLoading(false).
+        return
+    }).then((response) => {
+      if (response) {
+        appAddress = response.appAddress
+      }
     })
 
     const response = await appClient.hello({ name: contractInput }).catch((e: Error) => {
@@ -65,6 +72,39 @@ const AppCalls = ({ openModal, setModalState }: AppCallsInterface) => {
       setLoading(false)
       return
     })
+
+    // const deposit = await appClient.deposit({
+    //   address: activeAddress ?? "",
+    // }, {
+    //   sender: { signer, addr: activeAddress } as TransactionSignerAccount,
+    //   accounts: [activeAddress ?? ""],
+    // })
+
+
+
+
+    const suggestedParams = await algodClient.getTransactionParams().do()
+    const transaction = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+      from: activeAddress ?? "",
+      amount: 1e6,
+      suggestedParams,
+      to: appAddress,
+    })
+
+    const encodedTransaction = algosdk.encodeUnsignedTransaction(transaction)
+
+    const signedTransactions = await signTransactions([encodedTransaction])
+
+    const waitRoundsToConfirm = 4
+
+    try {
+      enqueueSnackbar('Sending transaction...', { variant: 'info' })
+      const { id } = await sendTransactions(signedTransactions, waitRoundsToConfirm)
+      enqueueSnackbar(`Transaction sent: ${id}`, { variant: 'success' })
+
+    } catch (e) {
+      enqueueSnackbar('Failed to send transaction', { variant: 'error' })
+    }
 
     enqueueSnackbar(`Response from the contract: ${response?.return}`, { variant: 'success' })
     setLoading(false)

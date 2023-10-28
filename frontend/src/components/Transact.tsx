@@ -41,6 +41,11 @@ const Transact = ({ openModal, setModalState }: TransactInterface) => {
       amount: 1e6,
       suggestedParams,
     })
+    const txc = new algosdk.AtomicTransactionComposer()
+    txc.addTransaction({
+      signer: signer,
+      txn: transaction
+    })
 
     const encodedTransaction = algosdk.encodeUnsignedTransaction(transaction)
 
