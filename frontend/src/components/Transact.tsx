@@ -28,6 +28,7 @@ const Transact = ({ openModal, setModalState }: TransactInterface) => {
   const handleSubmitAlgo = async () => {
     setLoading(true)
 
+
     if (!signer || !activeAddress) {
       enqueueSnackbar('Please connect wallet first', { variant: 'warning' })
       return
