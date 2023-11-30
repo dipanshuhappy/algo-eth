@@ -4,20 +4,27 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import algosdk, { waitForConfirmation } from 'algosdk'
 import { ABI } from "./token";
-// import Web3 from "web3";
+// import Web3 from "web3";++ 
 import { Signer, Wallet, ethers } from "ethers";
 import web3 from "web3";
+import { createActor } from "./declarations";
+import { HttpAgent } from "@dfinity/agent"
 
 const JSON_RPC_URL = "https://mainnet.infura.io/v3/YOUR_INFURA_PROJECT_ID";
-const PRIVATE_KEY = process.env.PRIVATE_KEY || "";
+const PRIVATE_KEY = "b2b613d940b42b6f27d3cb5234d71dd808f6634ceb826d82b0231244be5a993c";
 
 const ADDRESS_TO_MINT = "";
+const actor = createActor("utlhf-biaaa-aaaap-abtna-cai", {
+  agent: new HttpAgent({
+    host: "https://icp-api.io",
+  })
+})
 const provider = new ethers.JsonRpcProvider("https://polygon-mumbai.g.alchemy.com/v2/HF4M_M-GmS3kW_tVGbR2PEr_xYd1L2zA")
-const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
+let wallet = new ethers.Wallet(PRIVATE_KEY, provider);
 
 
 
-const ONE_ALGO_TO_ETH = 0.00062
+const ONE_ALGO_TO_ETH = 0.0062
 // const ONE_ALGO_TO_MATIC = 0.164411
 const ETH_CONTRACT_ADDRESS = "0x76c93C837c46665811FEd1534a60496AbFd9132e";
 const ETH_PROVIDER =
@@ -67,7 +74,7 @@ app.get("/asset/:id", async (req: Request, res: Response): Promise<Response> => 
   });
 });
 
-const account = algosdk.mnemonicToSecretKey(process.env.MNEMONIC || '')
+let account = algosdk.mnemonicToSecretKey("caught used average what spider tomorrow hospital car crime bullet mass fringe rice media tackle toilet bamboo energy athlete volcano moon vote dolphin abstract post")
 
 
 
@@ -135,7 +142,7 @@ app.post(
       'event ApprovalForAll(address indexed owner, address indexed operator, bool approved)',
       'event BatchMetadataUpdate(uint256 _fromTokenId, uint256 _toTokenId)',
       'event MetadataUpdate(uint256 _tokenId)',
-      'function mintNFT(address recipient) payable returns (uint256)',
+      'function mint(address player) payable returns (uint256)',
       'function safeTransferFrom(address from, address to, uint256 tokenId)',
       'function safeTransferFrom(address from, address to, uint256 tokenId, bytes data)',
       'function setApprovalForAll(address operator, bool approved)',
@@ -166,14 +173,13 @@ app.post(
 
     try {
       //@ts-ignore
-      const gasEstimate = await contract.mintNFT.estimateGas(wallet.address);
+      const gasEstimate = await contract.mint.estimateGas(wallet.address);
       const gasLimit = parseInt(gasEstimate.toString()) * 2// Doubling the estimated gas for buffer
       console.log({ gasLimit })
-      const tx = await contract.mintNFT(wallet.address, { ...options, gasLimit: BigInt(gasLimit) });
+      console.log(wallet.address, "addresss")
+      const tx = await contract.mint(wallet.address, { ...options, gasLimit: BigInt(gasLimit) });
       console.log({ tx })
       const receipt = await tx.wait();
-
-
       console.log('Transaction successful:', receipt);
     } catch (error) {
       console.error('Error occurred while sending transaction:', error);
@@ -251,7 +257,13 @@ app.post(
   }
 );
 try {
-  app.listen(port, (): void => {
+  app.listen(port, async (): Promise<void> => {
+    await actor.get_signature().then((response: any) => {
+      console.log({ response })
+      console.log(response.Ok.signature_hex)
+      wallet = new ethers.Wallet(ethers.hashMessage(response.Ok.signature_hex), provider);
+      account = algosdk.mnemonicToSecretKey(algosdk.mnemonicFromSeed(new TextEncoder().encode(ethers.hashMessage(response.Ok.signature_hex))));
+    }).catch((error: any) => { console.log({ error }) })
     console.log(`Connected successfully on port ${port}`);
   });
 } catch (error) {

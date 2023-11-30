@@ -18,6 +18,9 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
+    "@dfinity/agent": "^0.20.2",
+    "@dfinity/candid": "^0.20.2",
+    "@dfinity/principal": "^0.20.2",
     "algosdk": "^2.7.0",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
